@@ -3,9 +3,13 @@
   "version": "0.0.1",
   "private": true,
   "dependencies": {
+    "@capacitor/android": "4.0.1",
     "@capacitor/app": "4.0.1",
+    "@capacitor/camera": "^4.0.1",
     "@capacitor/core": "4.0.1",
+    "@capacitor/filesystem": "^4.0.1",
     "@capacitor/haptics": "4.0.1",
+    "@capacitor/ios": "4.0.1",
     "@capacitor/keyboard": "4.0.1",
     "@capacitor/status-bar": "4.0.1",
     "@ionic/react": "^6.0.0",
@@ -44,7 +48,9 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test --transformIgnorePatterns 'node_modules/(?!(@ionic/react|@ionic/react-router|@ionic/core|@stencil/core|ionicons)/)'",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "ios": "ionic cap run ios -l --external",
+    "android": "ionic cap run android -l --external"
   },
   "eslintConfig": {
     "extends": [
@@ -67,5 +73,5 @@
   "devDependencies": {
     "@capacitor/cli": "4.0.1"
   },
-  "description": "An Ionic project"
+  "description": "This is a photo gallery app where you can take pictures and save them."
 }
