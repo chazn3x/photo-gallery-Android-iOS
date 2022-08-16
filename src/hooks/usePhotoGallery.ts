@@ -1,9 +1,34 @@
 import { Camera, CameraResultType, CameraSource, Photo } from '@capacitor/camera'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Directory, Filesystem } from '@capacitor/filesystem'
+import { Preferences as Storage } from '@capacitor/preferences'
+import { isPlatform } from '@ionic/react'
+import { Capacitor } from '@capacitor/core'
+
+const PHOTO_STORAGE = 'photos'
 
 export function usePhotoGallery() {
   const [photos, setPhotos] = useState<UserPhoto[]>([])
+
+  useEffect(() => {
+    const loadSaved = async () => {
+      const { value } = await Storage.get({ key: PHOTO_STORAGE })
+
+      const photosInStorage = (value ? JSON.parse(value) : []) as UserPhoto[]
+
+      if (!isPlatform('hybrid')) {
+        for (let photo of photosInStorage) {
+          const file = await Filesystem.readFile({
+            path: photo.filepath,
+            directory: Directory.Data
+          })
+          photo.webviewPath = `data:image/jpeg;base64,${file.data}`
+        }
+      }
+      setPhotos(photosInStorage)
+    }
+    loadSaved()
+  }, [])
 
   const takePhoto = async () => {
     const photo = await Camera.getPhoto({
@@ -16,19 +41,38 @@ export function usePhotoGallery() {
     const savedFileImage = await savePicture(photo, fileName)
     const newPhotos = [savedFileImage, ...photos]
     setPhotos(newPhotos)
+
+    Storage.set({ key: PHOTO_STORAGE, value: JSON.stringify(newPhotos) })
   }
 
   const savePicture =async (photo: Photo, fileName: string): Promise<UserPhoto> => {
-    const base64Data = await base64FromPath(photo.webPath!)
+    let base64Data: string
+    if (isPlatform('hybrid')) {
+      const file = await Filesystem.readFile({
+        path: photo.path!
+      })
+      base64Data = file.data
+    } else {
+      base64Data = await base64FromPath(photo.webPath!)
+    }
     const savedFile = await Filesystem.writeFile({
       path: fileName,
       data: base64Data,
       directory: Directory.Data
     })
-    return {
-      filepath: fileName,
-      webviewPath: photo.webPath
+
+    if (isPlatform('hybrid')) {
+      return {
+        filepath: savedFile.uri,
+        webviewPath: Capacitor.convertFileSrc(savedFile.uri)
+      }
+    } else {
+      return {
+        filepath: fileName,
+        webviewPath: photo.webPath
+      }
     }
+
   }
 
   return {
